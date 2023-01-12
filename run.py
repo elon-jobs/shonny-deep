@@ -49,10 +49,10 @@ for link in links:
                 print('Adding links to JDownloader...')
                 button.click()
         except TimeoutException:
-            print('Failed Byppasing: '+ td)
+            print('Failed Bypassing: '+ td)
             continue
         except NoSuchElementException:
-            print('Failed Byppasing: '+ td)
+            print('Failed Bypassing: '+ td)
             continue       
             
 
