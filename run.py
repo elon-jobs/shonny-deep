@@ -15,6 +15,10 @@ options.add_argument("--disable-blink-features=AutomationControlled")
 
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
+DELAY = 11
+shouldWait = False
+isRecaptcha = False
+
 print('WELCOME TO SHONNY DEEP!')
 print('Reading links...')
 awesome_links = open('./links.txt', 'r')
@@ -26,35 +30,60 @@ for link in links:
     driver.get(link)    
     anchors = driver.find_elements(By.TAG_NAME, 'a')
     for anchor in anchors:
-        a = anchor.get_attribute('title')
+        a = anchor.get_attribute('title')        
         ## Getting download links
         if (a == 'Enlaces'):
             to_download.append(anchor.get_attribute('href'))
             
+                
+            
     if(len(to_download) == 0):
-        print('Failed:' + link)
-        continue
-    for td in to_download:
-        print('Going to Ad site')
-        driver.get(td)
-        # We will wait for the "Click aquí" button
-        try:        
-            ad_site = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, 'button')))
-            # Once we have the presence of the button in the DOM, let's execute the noobBypass function in the Chrome console
-            if (ad_site):
-                print('Noob bypassing...')
-                driver.execute_script("noobBypass();")            
-                #Let's wait a couple of seconds            
-                button = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, '//*[@id="tab1"]/form/input[5]')))
-                print('Adding links to JDownloader...')
-                button.click()
-        except TimeoutException:
-            print('Failed Bypassing: '+ td)
+        # Trying the ones that are inside a paragraph
+        print('Second way...')
+        anchors = driver.find_elements(By.CSS_SELECTOR, 'p.info > a')
+        for anchor in anchors:
+            a = anchor.get_attribute('href')            
+            to_download.append(a)
+        
+        if(len(to_download) == 0):
+            print('Failed:' + link)
             continue
-        except NoSuchElementException:
-            print('Failed Bypassing: '+ td)
-            continue       
+        
+        shouldWait = True
+        
+    if (shouldWait):
+        for td in to_download:
+            print('Going to Ad site')
+            driver.get(td)
+            ad_site = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, 'vell')))
+            if (ad_site):
+                ad_site.click()                
+                recaptcha = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".g-recaptcha")))    
+                if (recaptcha):
+                    print('Using reCAPTCHA: ' + td)
+                
+    else:
+        for td in to_download:
+            print('Going to Ad site')
+            driver.get(td)
+            # We will wait for the "Click aquí" button
+            try:        
+                ad_site = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, 'button')))
+                # Once we have the presence of the button in the DOM, let's execute the noobBypass function in the Chrome console
+                if (ad_site):
+                    print('Noob bypassing...')
+                    driver.execute_script("noobBypass();")            
+                    #Let's wait a couple of seconds
+                    button = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, '//*[@id="tab1"]/form/input[5]')))
+                    print('Adding links to JDownloader...')
+                    button.click()
+            except TimeoutException:
+                print('Failed Bypassing: '+ td)
+                continue
+            except NoSuchElementException:
+                print('Failed Bypassing: '+ td)
+                continue       
             
 
-#Closing chromedriver        
+#Closing chromedriver
 driver.quit()
