@@ -69,8 +69,7 @@ for link in links:
             try:
                 ad_site = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, 'vell')))
                 if (ad_site):
-                    ad_site.click()                
-                    recaptcha = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".g-recaptcha")))    
+                    ad_site.click()
                     if (isReCAPTCHAenabled(driver)):
                         continue
             except:
