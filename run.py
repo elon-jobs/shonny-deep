@@ -5,7 +5,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from fake_useragent import UserAgent
 
 # Initialize driver
 options = webdriver.ChromeOptions()
@@ -13,10 +12,6 @@ options.add_experimental_option("excludeSwitches", ["enable-automation"])
 options.add_experimental_option('useAutomationExtension', False)
 options.add_argument('--headless')
 options.add_argument("--disable-blink-features=AutomationControlled")
-
-ua = UserAgent()
-userAgent = ua.random
-options.add_argument(f'user-agent={userAgent}')
 
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
