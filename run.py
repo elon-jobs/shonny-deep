@@ -5,6 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from fake_useragent import UserAgent
 
 # Initialize driver
 options = webdriver.ChromeOptions()
@@ -13,11 +14,29 @@ options.add_experimental_option('useAutomationExtension', False)
 options.add_argument('--headless')
 options.add_argument("--disable-blink-features=AutomationControlled")
 
+ua = UserAgent()
+userAgent = ua.random
+options.add_argument(f'user-agent={userAgent}')
+
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 DELAY = 11
 shouldWait = False
 isRecaptcha = False
+
+def save_to_file(link):
+    with open("failed.txt", "a") as f:
+        f.write(f"{link}\n")
+        
+def isReCAPTCHAenabled(driver):
+    recaptcha = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".g-recaptcha")))
+    if (recaptcha):        
+        get_url = driver.current_url
+        print('Using reCAPTCHA ' + get_url)
+        save_to_file(get_url)        
+        return True
+    return False
+
 
 print('WELCOME TO SHONNY DEEP!')
 print('Reading links...')
@@ -47,43 +66,41 @@ for link in links:
         
         if(len(to_download) == 0):
             print('Failed:' + link)
-            continue
-        
-        shouldWait = True
-        
-    if (shouldWait):
+            continue        
+    
         for td in to_download:
             print('Going to Ad site')
             driver.get(td)
-            ad_site = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, 'vell')))
-            if (ad_site):
-                ad_site.click()                
-                recaptcha = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".g-recaptcha")))    
-                if (recaptcha):
-                    print('Using reCAPTCHA: ' + td)
-                
-    else:
-        for td in to_download:
-            print('Going to Ad site')
-            driver.get(td)
-            # We will wait for the "Click aquí" button
-            try:        
-                ad_site = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, 'button')))
-                # Once we have the presence of the button in the DOM, let's execute the noobBypass function in the Chrome console
+            try:
+                ad_site = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, 'vell')))
                 if (ad_site):
-                    print('Noob bypassing...')
-                    driver.execute_script("noobBypass();")            
-                    #Let's wait a couple of seconds
-                    button = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, '//*[@id="tab1"]/form/input[5]')))
-                    print('Adding links to JDownloader...')
-                    button.click()
-            except TimeoutException:
-                print('Failed Bypassing: '+ td)
-                continue
-            except NoSuchElementException:
-                print('Failed Bypassing: '+ td)
-                continue       
-            
+                    ad_site.click()                
+                    recaptcha = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".g-recaptcha")))    
+                    if (isReCAPTCHAenabled(driver)):
+                        continue
+            except:
+                for td in to_download:                    
+                    driver.get(td)
+                    # We will wait for the "Click aquí" button
+                    try:        
+                        ad_site = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, 'button')))
+                        # Once we have the presence of the button in the DOM, let's execute the noobBypass function in the Chrome console
+                        if (ad_site):
+                            print('Noob bypassing...')
+                            driver.execute_script("noobBypass();")            
+                            if (isReCAPTCHAenabled(driver)):
+                                continue
+                            
+                            #Let's wait a couple of seconds
+                            button = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, '//*[@id="tab1"]/form/input[5]')))
+                            print('Adding links to JDownloader...')
+                            button.click()
+                    except TimeoutException:
+                        print('Failed Bypassing: '+ td)
+                        continue
+                    except NoSuchElementException:
+                        print('Failed Bypassing: '+ td)
+                        continue
 
 #Closing chromedriver
 driver.quit()
